@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>Plywood VAT</title>
+
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Plywood VAT">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+<style>
+
+*{
+    box-sizing:border-box;
+    font-family:-apple-system,BlinkMacSystemFont,sans-serif;
+}
+
+body{
+    margin:0;
+    padding:10px;
+    background:#f2f2f7;
+}
+
+.card{
+    max-width:390px;
+    margin:auto;
+    background:white;
+    border-radius:18px;
+    padding:14px;
+    box-shadow:0 4px 12px rgba(0,0,0,.08);
+}
+
+h1{
+    text-align:center;
+    font-size:24px;
+    margin:0 0 12px;
+    color:#007AFF;
+}
+
+.row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:8px;
+}
+
+label{
+    font-size:14px;
+    font-weight:500;
+}
+
+input{
+    width:140px;
+    height:36px;
+    border:1px solid #ddd;
+    border-radius:8px;
+    text-align:right;
+    padding:0 8px;
+    font-size:14px;
+}
+
+.result{
+    margin-top:12px;
+    padding-top:10px;
+    border-top:1px solid #eee;
+}
+
+.result-row{
+    display:flex;
+    justify-content:space-between;
+    margin:5px 0;
+}
+
+.value{
+    color:#007AFF;
+    font-weight:600;
+}
+
+.total{
+    border-top:1px dashed #ccc;
+    margin-top:8px;
+    padding-top:8px;
+    font-size:18px;
+    font-weight:bold;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="card">
+
+<h1>Plywood VAT</h1>
+
+<div class="row">
+<label>Thickness Buy</label>
+<input id="thicknessBuy" value="10.5">
+</div>
+
+<div class="row">
+<label>Thickness VAT</label>
+<input id="thicknessVat" value="11">
+</div>
+
+<div class="row">
+<label>Width (mm)</label>
+<input id="width" value="1220">
+</div>
+
+<div class="row">
+<label>Length (mm)</label>
+<input id="length" value="2440">
+</div>
+
+<div class="row">
+<label>Bundles</label>
+<input id="bundles" value="18">
+</div>
+
+<div class="row">
+<label>Pcs / Bundle</label>
+<input id="pcsBundle" value="90">
+</div>
+
+<div class="row">
+<label>Price VND/m³</label>
+<input id="priceM3" value="6,300,000">
+</div>
+
+<div class="row">
+<label>Price VND/Tấm</label>
+<input id="priceSheet">
+</div>
+
+<div class="result">
+
+<div class="result-row">
+<span>PCS</span>
+<span class="value" id="pcsResult">0</span>
+</div>
+
+<div class="result-row">
+<span>CBM Buy</span>
+<span class="value" id="cbmBuyResult">0</span>
+</div>
+
+<div class="result-row">
+<span>CBM VAT</span>
+<span class="value" id="cbmVatResult">0</span>
+</div>
+
+<div class="result-row">
+<span>VAT Price/m³</span>
+<span class="value" id="vatPriceResult">0</span>
+</div>
+
+<div class="result-row">
+<span>Amount</span>
+<span class="value" id="amountResult">0</span>
+</div>
+
+<div class="result-row">
+<span>VAT 8%</span>
+<span class="value" id="vatResult">0</span>
+</div>
+
+<div class="result-row total">
+<span>Total</span>
+<span class="value" id="totalResult">0</span>
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+let lastEdited='m3';
+
+function num(id){
+    return Number(
+        document.getElementById(id)
+        .value.replace(/,/g,'')
+    ) || 0;
+}
+
+function money(v){
+    return Math.round(v)
+    .toLocaleString('en-US');
+}
+
+function formatInput(el){
+
+    let value=el.value.replace(/,/g,'');
+
+    if(value==='' || isNaN(value)) return;
+
+    el.value=
+    Number(value)
+    .toLocaleString('en-US');
+}
+
+function calculate(){
+
+    let thicknessBuy=num('thicknessBuy');
+    let thicknessVat=num('thicknessVat');
+
+    let width=num('width');
+    let length=num('length');
+
+    let bundles=num('bundles');
+    let pcsBundle=num('pcsBundle');
+
+    let pcs=
+    bundles*pcsBundle;
+
+    let cbmBuy=
+    width*
+    length*
+    thicknessBuy*
+    pcs/
+    1000000000;
+
+    let cbmVat=
+    width*
+    length*
+    thicknessVat*
+    pcs/
+    1000000000;
+
+    let cbmSheetBuy=
+    width*
+    length*
+    thicknessBuy/
+    1000000000;
+
+    let priceM3=num('priceM3');
+    let priceSheet=num('priceSheet');
+
+    if(lastEdited==='m3'){
+
+        priceSheet=
+        priceM3*
+        cbmSheetBuy;
+
+        document.getElementById('priceSheet').value=
+        money(priceSheet);
+
+    }else{
+
+        priceM3=
+        cbmSheetBuy>0
+        ? priceSheet/cbmSheetBuy
+        :0;
+
+        document.getElementById('priceM3').value=
+        money(priceM3);
+    }
+
+    let amount=
+    cbmBuy*
+    priceM3;
+
+    let vatPrice=
+    cbmVat>0
+    ? amount/cbmVat
+    :0;
+
+    let vat=
+    amount*0.08;
+
+    let total=
+    amount+vat;
+
+    pcsResult.innerText=
+    money(pcs);
+
+    cbmBuyResult.innerText=
+    cbmBuy.toFixed(2);
+
+    cbmVatResult.innerText=
+    cbmVat.toFixed(2);
+
+    vatPriceResult.innerText=
+    money(vatPrice);
+
+    amountResult.innerText=
+    money(amount);
+
+    vatResult.innerText=
+    money(vat);
+
+    totalResult.innerText=
+    money(total);
+}
+
+document.querySelectorAll('input').forEach(i=>{
+
+    i.addEventListener('input',()=>{
+
+        if(i.id==='priceM3'){
+            lastEdited='m3';
+            formatInput(i);
+        }
+
+        if(i.id==='priceSheet'){
+            lastEdited='sheet';
+            formatInput(i);
+        }
+
+        calculate();
+    });
+
+});
+
+calculate();
+
+</script>
+
+</body>
+</html>
